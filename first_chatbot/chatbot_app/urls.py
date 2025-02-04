@@ -5,6 +5,5 @@ from .views import chatbot_view
 
 
 urlpatterns = [
-    path('chat/', chatbot_view, name = "chatbot_app"),
-    path('admin/', admin.site.urls),
+    path('chat/', chatbot_view, name = "chat"),
 ]
