@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,6 +23,9 @@ export default function Home() {
   const [chat, setChat] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [typing, setTyping] = useState<boolean>(false); // To track when bot is typing
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
 
   const sendMessage = async () => {
     if (!message.trim()) return;
@@ -35,7 +38,13 @@ export default function Home() {
       const res = await axios.post("http://127.0.0.1:8000/chat/", { message }, {
         headers: { "Content-Type": "application/json" },
       });
-      console.log("Response from backend:", res.data);
+
+      if (!res.data.audioUrl) {  //Check if audio URL is present
+        console.warn("No audio URL received from the backend.");
+    } else {
+        setAudioUrl(res.data.audioUrl);  //Set the audio URL state
+    }
+    
 
       // We first set the assistant's message as an empty string in chat
       const botMessage: Message = { role: "assistant", content: "" };
@@ -73,6 +82,19 @@ export default function Home() {
     setMessage(""); // Clear user input after sending message
   };
 
+  useEffect(() => {
+    if (audioUrl && audioRef.current) {
+        // Prepend the base URL to the audio path
+        const fullAudioUrl = `http://127.0.0.1:8000${audioUrl}`;
+        audioRef.current.src = fullAudioUrl;
+        audioRef.current.load(); // Ensure the audio element loads the new source
+        audioRef.current.play().catch((error) => {
+            console.error("Error playing audio:", error);
+        });
+    }
+}, [audioUrl]);
+
+
   return (
     <div className="max-w-lg mx-auto p-4">
       <Card>
@@ -81,15 +103,16 @@ export default function Home() {
           <CardDescription>Functional Conversational Chatbot</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border p-3 h-80 overflow-y-auto">
+          <div className="border p-3 h-60 overflow-y-auto">
             {chat.map((msg, index) => (
               <p key={index} className={`text-${msg.role === "user" ? "right" : "left"}`}>
-                <strong>{msg.role === "user" ? "You" : "Odysseus"}:</strong> {msg.content}
+                <strong>{msg.role === "user" ? "You" : "O"}:</strong> {msg.content}
               </p>
             ))}
-            {loading && !typing && <p className="text-left"><strong>Odysseus:</strong> Typing...</p>}
+            {loading && !typing && <p className="text-left"><strong>O:</strong> Typing...</p>}
           </div>
         </CardContent>
+        <audio ref={audioRef} controls style={{ margin: "-10px 100px 10px auto" }} />  
         <CardFooter>
           <div className="grid w-full gap-2">
             <Textarea

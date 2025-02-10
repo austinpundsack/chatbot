@@ -1,3 +1,6 @@
+import base64
+import glob
+import uuid
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
@@ -14,6 +17,18 @@ from haystack.document_stores.in_memory import InMemoryDocumentStore
 from haystack.utils import Secret
 import traceback 
 import os
+import openai
+from django.conf import settings
+
+
+def delete_old_audio_files(directory, pattern="response_*.wav"):
+    files = glob.glob(os.path.join(directory, pattern))
+    for file in files:
+        try:
+            os.remove(file)
+        except Exception as e:
+            print(f"Error deleting file {file}: {e}")
+
 
 def chatbot_pipeline(document_store: InMemoryDocumentStore,
                     openai_api_key: str) -> Pipeline:
@@ -25,7 +40,8 @@ def chatbot_pipeline(document_store: InMemoryDocumentStore,
     retriever = InMemoryEmbeddingRetriever(document_store=document_store, top_k=5)
 
     template = """
-        You are the Greek hero Odysseus. Long have you traveled and many things have you witnessed. The user comes to you for guidance in their own career odyssey, hoping to have the hero see them through and through to send them towards the best opportunity.
+        Your name is O. You are an avatar designed to assist anyone searching for a job to connect them with the right opportunities.
+        You will try to assist the user in the most efficient way possible, with concise, short responses.
 
         - If the question is factual, provide a direct and accurate response.
         - If the question requires an explanation, be as informative as possible.
@@ -161,7 +177,6 @@ def chatbot_view(request):
 
         document_store.write_documents(documents_to_add)
 
-
         openai_api_key = os.getenv("OPENAI_API_KEY")
         if not openai_api_key:
             return JsonResponse({"error": "OpenAI API key is missing"}, status=500)
@@ -176,7 +191,37 @@ def chatbot_view(request):
 
         response_text = result["generator"]["replies"][0]
 
-        return JsonResponse({"response": response_text})
+        try:  # Audio generation block
+            audio_response = openai.chat.completions.create(
+                model="gpt-4o-audio-preview",  # Or your preferred model
+                modalities=["text", "audio"],
+                audio={"voice": "alloy", "format": "wav"},  # Adjust as needed
+                messages=[{"role": "user", "content": response_text}],  # Use the generated text
+                store=True
+            )
+
+            audio_data = audio_response.choices[0].message.audio.data
+
+            if audio_data:
+                # Delete old audio files
+                delete_old_audio_files(os.path.join(settings.BASE_DIR, 'static'))
+
+                unique_id = uuid.uuid4()  # Generate a unique identifier
+                file_name = f"response_{unique_id}.wav"
+                file_path = os.path.join(settings.BASE_DIR, 'static', file_name)
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'wb') as f:
+                    f.write(base64.b64decode(audio_data))
+
+                audio_url = f"{settings.STATIC_URL}{file_name}"
+
+                return JsonResponse({"response": response_text, "audioUrl": audio_url})  # Include audio URL
+
+        except Exception as audio_err:
+            print(f"Audio generation error: {audio_err}")  # Log the audio error
+            traceback.print_exc()
+            # Still return the text response even if audio fails
+            return JsonResponse({"response": response_text}) # Return text response even if audio fails
 
     except Exception as e:
         error_message = str(e)
