@@ -51,7 +51,8 @@ export default function Home() {
       setChat((prevChat) => [...prevChat, botMessage]);
 
       // Now simulate typing effect for the bot response
-      const responseContent = res.data.response;
+      const responseContent = res.data.response?.generator?.replies[0]?.content ?? "hi";
+      console.log("Full API Response:", res.data.response);
       let index = 0;
 
       setTyping(true); // Set typing animation to true
