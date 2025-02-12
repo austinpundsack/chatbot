@@ -22,7 +22,7 @@ import openai
 from django.conf import settings
 
 
-def delete_old_audio_files(directory, pattern="response_*.wav"):
+def delete_old_audio_files(directory, pattern="response_*.mp3"):
     files = glob.glob(os.path.join(directory, pattern))
     for file in files:
         try:
