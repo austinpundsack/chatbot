@@ -20,6 +20,7 @@ import traceback
 import os
 import openai
 from django.conf import settings
+from transformers import pipeline  # Import pipeline from transformers
 
 
 def delete_old_audio_files(directory, pattern="response_*.mp3"):
@@ -145,6 +146,13 @@ def chatbot_view(request):
 
         if not generated_text:
             raise ValueError("No content generated from pipeline.")
+
+        # Perform sentiment analysis on the generated text
+        sentiment_analysis = pipeline("sentiment-analysis")
+        sentiment_result = sentiment_analysis(generated_text)[0]
+        emotion = sentiment_result['label'].lower()
+
+        generated_text += f" The emotion I'm feeling in this response is {emotion}."
 
         audio_url = None  # Ensure variable exists to avoid UnboundLocalError
 
