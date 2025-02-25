@@ -147,10 +147,10 @@ def chatbot_view(request):
         if not generated_text:
             raise ValueError("No content generated from pipeline.")
 
-        # Perform sentiment analysis on the generated text
-        sentiment_analysis = pipeline("sentiment-analysis")
-        sentiment_result = sentiment_analysis(generated_text)[0]
-        emotion = sentiment_result['label'].lower()
+        # Perform emotion analysis on the generated text
+        emotion_analysis = pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", return_all_scores=True)
+        emotion_result = emotion_analysis(generated_text)[0]
+        emotion = max(emotion_result, key=lambda x: x['score'])['label'].lower()
 
         generated_text += f" The emotion I'm feeling in this response is {emotion}."
 
