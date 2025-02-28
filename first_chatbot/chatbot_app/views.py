@@ -20,6 +20,7 @@ import traceback
 import os
 import openai
 from django.conf import settings
+from transformers import pipeline  # Import pipeline from transformers
 
 
 def delete_old_audio_files(directory, pattern="response_*.mp3"):
@@ -146,6 +147,13 @@ def chatbot_view(request):
         if not generated_text:
             raise ValueError("No content generated from pipeline.")
 
+        # Perform emotion analysis on the generated text
+        emotion_analysis = pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", return_all_scores=True)
+        emotion_result = emotion_analysis(generated_text)[0]
+        emotion = max(emotion_result, key=lambda x: x['score'])['label'].lower()
+
+        generated_text += f" The emotion I'm feeling in this response is {emotion}."
+
         audio_url = None  # Ensure variable exists to avoid UnboundLocalError
 
         # Attempt to generate audio using OpenAI's speech synthesis
@@ -177,7 +185,7 @@ def chatbot_view(request):
         serialized_result = serialize_result(result)
 
         return JsonResponse(
-            {"response": serialized_result, "audioUrl": audio_url},  
+            {"response": serialized_result, "audioUrl": audio_url, "emotion": emotion},  
             json_dumps_params={"ensure_ascii": False}
         )
 
