@@ -1,6 +1,6 @@
 import { createCamera } from './components/camera.js';
 // import { createCube } from './components/cube.js';
-import { createSphere } from './components/sphere.js';
+// import { createSphere } from './components/sphere.js';
 import { createScene } from './components/scene.js';
 import { createLights } from './components/lights.js';
 import { createRenderer } from './systems/renderer.js';
@@ -9,9 +9,12 @@ import { Loop } from './systems/Loop.js';
 // import { createControls } from './systems/controls.js';
 // import { createMeshGroup } from './components/meshgroup.js';
 // import { loadBirds } from './components/models/bird.js';
-import { createTorus } from './components/torus.js';
+// import { createTorus } from './components/torus.js';
 import { AnimationManager } from './systems/AnimationManager.js'; 
-import { createTorusGroup } from './components/torusgroup.js';
+// import { createTorusGroup } from './components/torusgroup.js';
+import { createInvisibleShape, createTriangleGeometries } from './components/trianglegroup.js';
+// import {Mesh,MeshBasicMaterial} from 'three';
+
 
 // These variables are module-scoped: we cannot access them
 // from outside the module
@@ -20,6 +23,7 @@ let camera;
 let renderer;
 let scene;
 let loop;
+const animationManager = new AnimationManager();
 
 class World {
   constructor(container) {
@@ -28,24 +32,34 @@ class World {
     renderer = createRenderer();
     loop = new Loop(camera, scene, renderer);
     container.append(renderer.domElement);
-    const torus = createTorus();
-    scene.add(torus);
+    // const torus = createTorus();
+
+
+
+
+const shape = createInvisibleShape("sphere");
+const triangleGroup = createTriangleGeometries(shape.geometry);
+
+scene.add(shape);
+scene.add(triangleGroup);
+
+    // scene.add(torus);
     // const meshGroup = createMeshGroup();
     // scene.add(meshGroup);
-    // this.cube = createCube();
-    const sphere = createSphere();
-    const torusGroup = createTorusGroup();
-    scene.add(torusGroup);
+    // const sphere = createSphere();
+    // const torusGroup = createTorusGroup();
+    // scene.add(torusGroup);
 
-    scene.add(sphere);
+    // scene.add(sphere);
     // scene.add(this.cube);
 
     const { ambientLight, mainLight } = createLights();
     // camera.add(mainLight);
     scene.add(ambientLight, mainLight);
-    // controls = createControls(camera, renderer.domElement);
+    // this.cube = createCube();
+    // const controls = createControls(camera, renderer.domElement);
 
-    // this.controls.target.copy(this.cube.position);
+    // controls.target.copy(sphere.position);
 
     // controls.minAzimuthAngle = 0;
     // controls.maxAzimuthAngle = Math.PI;
@@ -60,20 +74,22 @@ class World {
     // controls.enableZoom = false;
     // controls.enablePan = false;
     // controls.dampingFactor = 1;
-
-
-    // Create and initialize the AnimationManager
-    this.animationManager = new AnimationManager();
-    this.animationManager.addObject(sphere);  // Add sphere to animation manager
-    this.animationManager.addObject(torus);   // Add torus to animation manager
-    this.animationManager.addObject(torusGroup);   // Add torus to animation manager
-
+    animationManager.addObject(triangleGroup);
+    triangleGroup.children.forEach((triangle) => animationManager.addObject(triangle));
+    // animationManager.addObject(sphere);  // Add sphere to animation manager
+    // animationManager.addObject(torus);   // Add torus to animation manager
+    // animationManager.addObject(torusGroup);   // Add torus to animation manager
+    // animationManager.addObject(torusGroup);
+    // animationManager.addObject(shape);   // Add torus to animation manager
     // loop.updatables.push(this.cube);
-    loop.updatables.push(sphere);
+    // loop.updatables.push(sphere);
+    // loop.updatables.push(shape);
+    loop.updatables.push(triangleGroup);
+    triangleGroup.children.forEach((triangle) => loop.updatables.push(triangle));
     // loop.updatables.push(meshGroup);
-    loop.updatables.push(torus);
+    // loop.updatables.push(torus);
     // loop.updatables.push(controls);
-    loop.updatables.push(torusGroup);
+    // loop.updatables.push(torusGroup);
     // loop.updatables.push(camera)
     scene.add(camera);
     // scene.add(ambientLight, mainLight, this.cube);
@@ -83,7 +99,7 @@ class World {
 
     // light.target = cube
     // controls.addEventListener('change', () => {
-    //   this.render();
+    //   render();
     //   });
     const resizer = new Resizer(container, camera, renderer);
 
@@ -142,4 +158,4 @@ class World {
 
 }
 
-export { World };
+export { World, animationManager };

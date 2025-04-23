@@ -1,4 +1,4 @@
-import { World } from './World/World.js';
+import { World, animationManager } from './World/World.js';
 
 
 // async function main() {
@@ -62,19 +62,19 @@ export function initializeWorld() {
     // Button to trigger "Start Animation"
     document.getElementById('surpriseAnimation').addEventListener('click', () => {
       // Trigger the animation state change for all objects managed by the AnimationManager
-        world.animationManager.setAllState('surprise'); // Set all objects' animation state to 'running'
+        animationManager.setAllState('surprise'); // Set all objects' animation state to 'running'
     });
   
     // Button to trigger "Pause Animation"
     document.getElementById('neutralAnimation').addEventListener('click', () => {
       // Trigger the animation state change for all objects managed by the AnimationManager
-      world.animationManager.setAllState('neutral'); // Set all objects' animation state to 'paused'
+      animationManager.setAllState('neutral'); // Set all objects' animation state to 'paused'
     });
 
     // Button to trigger "Pause Animation"
     document.getElementById('angerAnimation').addEventListener('click', () => {
       // Trigger the animation state change for all objects managed by the AnimationManager
-      world.animationManager.setAllState('anger'); // Set all objects' animation state to 'paused'
+      animationManager.setAllState('anger'); // Set all objects' animation state to 'paused'
     });
 
 
@@ -83,8 +83,8 @@ export function initializeWorld() {
       console.log("Emotion changed:", emotionValue);
       
       // Call the animation manager
-      if (world && world.animationManager) {
-        world.animationManager.setAllState(emotionValue);
+      if (animationManager) {
+        animationManager.setAllState(emotionValue);
       } else {
         console.log("Animation Manager is not available.");
       }

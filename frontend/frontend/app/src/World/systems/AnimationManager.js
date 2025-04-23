@@ -1,44 +1,45 @@
 class AnimationManager {
-    constructor() {
-      this.objects = [];
-    }
-  
-    addObject(object) {
-      this.objects.push(object);
-    }
-  
-    update(delta) {
-      this.objects.forEach(object => {
-        if (object.animationState && object.animations[object.animationState]) {
-          object.animations[object.animationState](delta);
-        }
-      });
-    }
-  
-    setAnimationState(state) {
-        const animationManager = World.animationManager;  // Access the AnimationManager from World
-      
-        // Check if the animationManager is properly initialized
-        if (animationManager && animationManager.setAllState) {
-          animationManager.setAllState(state);  // Apply the state to all objects in the manager
-        } else {
-          console.error("AnimationManager is not initialized properly.");
-        }
-      }
-      
+  constructor() {
+    this.objects = [];
+  }
 
-    setAllState(state) {
-        for (const object of this.objects) {
-          this.setState(object, state);  // Apply state to each object
-        }
-      }
+  addObject(object) {
+    this.objects.push(object);
+  }
 
-    setState(object, state) {
-      if (object.animations[state]) {
-        object.animationState = state;
+  update(delta) {
+    this.objects.forEach((object) => {
+      if (object.tick) {
+        object.tick(delta); // Call the tick method for each object
+      } else {
+        console.log(`Object does not have a tick method:`, object);
       }
+    });
+  }
+
+  setAnimationState(state) {
+    this.setAllState(state);
+  }
+
+  setAllState(state) {
+    for (const object of this.objects) {
+      this.setStateRecursively(object, state); // Apply state recursively
     }
   }
   
-  export { AnimationManager };
+  setStateRecursively(object, state) {
+    // Apply the state to the current object
+    if (object.animations && object.animations[state]) {
+      object.animationState = state;
+    }
   
+    // If the object has children, apply the state to them as well
+    if (object.children && object.children.length > 0) {
+      object.children.forEach((child) => {
+        this.setStateRecursively(child, state);
+      });
+    }
+  }
+}
+
+export { AnimationManager };

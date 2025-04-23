@@ -208,11 +208,11 @@ export default function Home() {
         >
           Pause
         </Button> */}
-        {/* <Button
+       {/*  <Button
           id="control"
         >
           Move Control
-        </Button> */}
+        </Button>
                 {/* <Button
           id="hide"
         >
