@@ -206,7 +206,7 @@ def chatbot_view(request):
         emotion_result = emotion_analysis(generated_text)[0]
         emotion = max(emotion_result, key=lambda x: x['score'])['label'].lower()
 
-        generated_text += f" The emotion I'm feeling in this response is {emotion}."
+        # generated_text += f" The emotion I'm feeling in this response is {emotion}."
 
         audio_url = None  # Ensure variable exists to avoid UnboundLocalError
 
